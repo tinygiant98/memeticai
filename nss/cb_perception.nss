@@ -17,38 +17,28 @@ void main()
    object oObject = GetLastPerceived();
    if (!GetIsObjectValid(oObject))
    {
-       _PrintString("OnPerception, but Invalid object", DEBUG_COREAI);
        return;
    }
 
    if (GetLastPerceptionSeen())
    {
-       _Start("OnPerception type='see' target='"+_GetName(oObject)+"'", DEBUG_COREAI);
        MeExecuteGenerators("_see");
    }
    else if (GetLastPerceptionVanished())
    {
-       _Start("OnPerception type='vanished' target='"+_GetName(oObject)+"'", DEBUG_COREAI);
        MeExecuteGenerators("_van");
    }
    else if (GetLastPerceptionHeard())
    {
-       _Start("OnPerception type='hear' target='"+_GetName(oObject)+"'", DEBUG_COREAI);
        MeExecuteGenerators("_hea");
    }
    else if (GetLastPerceptionInaudible())
    {
-       _Start("OnPerception type='inaudible' target='"+_GetName(oObject)+"'", DEBUG_COREAI);
        MeExecuteGenerators("_ina");
    }
-
-   _Start("OnPerception type='perception' target='"+_GetName(oObject)+"'", DEBUG_COREAI);
        MeExecuteGenerators("_per");
-   _End();
 
    MeUpdateActions();
-
-   _End();
 }
 
 

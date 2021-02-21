@@ -12,12 +12,8 @@ void main()
 {
     if (!GetIsObjectValid(GetLastAttacker())) return;
 
-    _Start("OnAttacked attacker='"+_GetName(GetLastAttacker())+"' last-hostile='"+_GetName(GetLastHostileActor())+"'", DEBUG_COREAI);
-
     MeExecuteGenerators("_atk");
     MeUpdateActions();
-
-    _End("OnAttacked", DEBUG_COREAI);
 }
 
 

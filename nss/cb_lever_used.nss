@@ -3,9 +3,6 @@
 
 void main()
 {
-    //MeStartDebugging(DEBUG_UTILITY, 1);
-    _Start("LeverActivated");
-
     object   oPoI      = GetWaypointByTag("POI_ONE");
     location lLocation = GetLocation(oPoI);
     object   oLever    = OBJECT_SELF;
@@ -112,5 +109,4 @@ void main()
             MeRemoveEmitter(oCow, "CowPatty");
         }
     }
-    _End("LeverActivated");
 }

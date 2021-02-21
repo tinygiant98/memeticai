@@ -184,6 +184,13 @@ void MeDeclareLocalMessage(string sMessageName, object oTarget = OBJECT_INVALID)
 //                "Friendly Greeting 3" = "ignored"
 //                 ...
 //
+// TODO Could probably do with some modernization:
+//  --> _GetLocalString(oTarget, "@varname", 3) should return
+//      the value of the module-level variable @varname3.  Since no
+//      variable has to be set on the target, this could work for any
+//      object.
+
+
 // MeGetConfString("MT: Friendly Greeting", 2) returns "Hi There!".
 // Notice that the final space and number are not part of the name.
 //
@@ -239,6 +246,9 @@ void   MeInheritFrom(object oTarget, object oParent);
 //           modifiers. If you call MeInstanceOf(oSelf, "generic, fighter");
 //           Then generic's memes get +0 and fighter's memes get +1.
 //           Memes can be created with MEME_NOBIAS to avoid this modifier.
+
+// TODO This is the first function called by a spawning NPC to set their classes.
+//  Classes are set on the "MT Class" variable of the NPC.
 void   MeInstanceOf(object oTarget, string sClass, int iBias=0);
 
 // MeGetClassByIndex
@@ -931,6 +941,10 @@ object MeGetActiveClass()
 // For example: MeGetConfString(OBJECT_SELF, "Home Areas", 1);
 //   if Home Areas 1 is @Commoner Area
 
+// Allows the NPC to use module level shared variables by sending
+// @ as the first character in the variable name.  If no @, just
+// get the variable.  This should be made part of _GetLocalString
+// to kickstart the inheritance/shared variable system.
 string MeGetConfString(object oTarget, string sName, int iIndex=0)
 {
     string sSuffix  = "";
@@ -1033,19 +1047,23 @@ void _CopyDeclTable(object oClass, object oNewClass, string sType)
 // oTarget may be a class or a non-class.
 void MeInstanceOf(object oTarget, string sClass, int iBias=0)
 {
-    _Start("MeInstanceOf", DEBUG_UTILITY);
-
     // 1. First we want to build a list of the requested classes
+    // TODO Why?  Use built-in CSV functions to handle.  MeExplodeList turns a CSV into a varlist.
+    //  Is that useful?
     MeExplodeList(oTarget, sClass, "MEME_NewParents");
+    // MeExplodeList turns CSV list sClass into varlist Meme_NewParents
 
     // 2. Next we remove the classes we already belong to
-    int count = MeGetStringCount(oTarget, "MEME_Parents");
-    int count2 = MeGetStringCount(oTarget, "MEME_NewParents");
+    int count = MeGetStringCount(oTarget, "MEME_Parents");      // <-- Where is this set?  Looks like line 1117 or so of this script
+                                                                // This whole loop removes previous classes, so this variable
+                                                                // should be empty on a new spawn
+    int count2 = MeGetStringCount(oTarget, "MEME_NewParents");  // <-- from earlier in this function
     int count3;
     string sName, sNewName;
     object oModule = GetModule();
 
-    _Start("PruneList", DEBUG_UTILITY);
+    // TODO Loops though MEME_NewParents (CSV list) and check to see if they're already in the list.
+    // Probably best just to add new list items with bUnique = TRUE.
     // Iterate through the short, new list.
     for (; count2 > 0; count2--)
     {
@@ -1071,6 +1089,8 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
     //  which is a hassle.)
     for (count = MeGetStringCount(oTarget, "MEME_NewParents"); count > 0; count--)
     {
+        //Find the instantiation object for this class --> perfect fit for functions in dsutil_i_map
+        //Removes the class from the MEME_NewParents list if the object/item isn't instantiated.
         sNewName = MeGetStringByIndex(oTarget, count-1, "MEME_NewParents");
         if (GetLocalObject(oModule, "MEME_Class_"+sNewName) == OBJECT_INVALID)
         {
@@ -1080,8 +1100,11 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
         }
     } // Now we have a shorter list of new classes to be added
 
-    _End("PruneList", DEBUG_UTILITY);
+    //I think everything above this line can be done this way:
+    sParents = MergeLists(Parent, NewParents, TRUE);
 
+
+    //TODO ok, this has all been to cut down the MEME_NewParents list.  Lots of work for that.
     count = MeGetStringCount(oTarget, "MEME_NewParents");
     if (count == 0)
     {
@@ -1091,9 +1114,9 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
         return;
     }
 
-
     // 4. Add these items to the Parents list
-    _Start("MergeList", DEBUG_UTILITY);
+    // TODO Now adding everything from MEME_NewParents to MEME_Parents
+    // Probably can do all of the above (except checking for existence) with a copylist & bUnique = TRUE
     count = MeGetStringCount(oTarget, "MEME_NewParents");
     //_PrintString("There are "+IntToString(count)+" new classes being added.", DEBUG_UTILITY);
     for (0; count > 0; count--)
@@ -1106,11 +1129,16 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
     //_PrintString("This object now belongs to "+IntToString(count)+" classes.", DEBUG_UTILITY);
 
     // 5. Get the class key of the current Parent
-    object oParent = GetLocalObject(oTarget, "MEME_Parent");
-    string sKey = GetLocalString(oParent, "MEME_ClassKey");
-    string sFullName = GetLocalString(oParent, "Name");
+    
+    object oParent = GetLocalObject(oTarget, "MEME_Parent");  // <-- When was this set?  Later on, so on a new spawn, this is empty
+                                                              // also done in MeInheritFrom(), but that wasn't called before this
+    string sKey = GetLocalString(oParent, "MEME_ClassKey");   // <-- which means this is also empty
+    string sFullName = GetLocalString(oParent, "Name");       // <-- and this?  But no checks for bad values, so it must've been set somewheres
 
     // 6. Merge it with each of the new class keys
+    // What's a key used for?  Adding a bunch of strings to a module-level string
+    // Ok, there are multiple variables that hold a copy of all the class combinations
+    // that currently exist.  Why?  For instantiation of a new combination of classes?
     string sNewKey;
     for (count = MeGetStringCount(oTarget, "MEME_NewParents"); count > 0; count--)
     {
@@ -1119,12 +1147,15 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
         sNewKey  = GetLocalString(oModule, "MEME_ClassKey_"+sNewName);
         sKey     = _MeKeyCombine(sNewKey, sKey);
 
-
         SetLocalInt(NPC_SELF, "MEME_"+sNewName+"_Bias", iBias++);
     }
-    _End("MergeList", DEBUG_UTILITY);
 
     // 7. Does this new class key exist? Is this a newly discovered class combination? A new breed of NPC? Could it be??
+    // Ok, so won't this method be called constantly if I simply create a new instance with the same classes, but in a
+    //  different order.  Seems that, in this function, fighter + bartender != bartender + fighter
+    // Looks like there's an actual object for each key/class combination
+    // If this is necessary, need a different way to determine whether it's new or not, probably a loop with haslistitem
+    //  or similiar.
     object oNewClass = GetLocalObject(oModule, "MEME_ClassKey_"+sKey);
     object oClass, oOwner;
 
@@ -1135,6 +1166,7 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
         // 8. Create the new merged class
         object oMemeMagicWP = GetObjectByTag("Magic_Memetic_WP");
 
+        //hmmm, making more stores.  so the stores are a class that each object inherits from?
         oNewClass = CreateObject(OBJECT_TYPE_STORE, "Magic_Memetic_Store", GetLocation(oMemeMagicWP));
 
         if (!GetIsObjectValid(oNewClass))
@@ -1191,7 +1223,6 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
     }
 
     // 10. Set the Parent to be the new merged class object
-    _Start("ConnectToNewClass", DEBUG_UTILITY);
     SetLocalObject(oTarget, "MEME_Parent", oNewClass);
     if (!GetIsObjectValid(oNewClass))
     {
@@ -1203,6 +1234,7 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
     count = MeGetStringCount(oTarget, "MEME_NewParents");
     //_PrintString("There are "+IntToString(count)+" classes to instantiate.", DEBUG_UTILITY);
 
+    //run the _go for each of the classes represented on this NPC/object
     for (0; count > 0; count--)
     {
         sNewName = MeGetStringByIndex(oTarget, count-1, "MEME_NewParents"); // Direct access for efficiency
@@ -1212,9 +1244,6 @@ void MeInstanceOf(object oTarget, string sClass, int iBias=0)
 
     // 12. Clean up that new parent list.
     MeDeleteStringRefs(oTarget, "MEME_NewParents");
-    _End("ConnectToNewClass", DEBUG_UTILITY);
-
-    _End("MeInstanceOf", DEBUG_UTILITY);
 }
 
 /*  I support two forms of variable inheritance. This distinction is made to

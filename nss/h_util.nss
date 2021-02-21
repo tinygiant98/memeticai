@@ -40,6 +40,8 @@ void   MeLoadLibrary      (string sLib);
 // It also initializes the global variable, NPC_SELF. This is where all memetic variables should
 // be stored. This object is inspected by other memetic scripts and will be saved, when NPC saving
 // is supported. It is you memetic equivalent to OBJECT_SELF.
+
+// TODO First function called by a spawning npc...
 object MeInit(object oTarget = OBJECT_INVALID);
 
 // MeExecuteScript
@@ -585,23 +587,30 @@ object MeGetNPCSelfOwner(object oNPCSelf)
  */
 object MeInit(object oTarget = OBJECT_INVALID)
 {
-    _Start("MeInit", DEBUG_TOOLKIT);
-
     if (oTarget == OBJECT_INVALID) oTarget = OBJECT_SELF;
+
     object oSelf = GetLocalObject(oTarget, "MEME_NPCSelf");
 
     if (!GetIsObjectValid(oSelf))
     {
+        //Accomplishes all functions to instantiate the target object MEME_NPCSelf.
+        //  NPC_SELF is an object on the NPC object that essentially mirrors the NPC
+        //  but holds all the variables, class information, etc. to make the NPC
+        //  act the way you want.  It's referenced as global NPC_SELF?
+
+        // oTarget is the spawning NPC.
         location l = GetLocation(oTarget);
         object area = GetAreaFromLocation(l);
-        //_PrintString("NPC is in area "+_GetName(area), DEBUG_UTILITY);
 
+        // TODO Apparently, all variable stores are created on the magic memetic waypoint?
+        //  Sounds like a perfect candidate for a datapoint/data object.  Still need to
+        //  figure out the real intent of this WP
         object oMemeMagicWP = GetObjectByTag("Magic_Memetic_WP");
-        if (oMemeMagicWP == OBJECT_INVALID) PrintString("<Assert>Cannot find the waypoint - Magic_Memetic_WP - this used to be called MemeVault.</Assert>");
-        else
-        {
-            _PrintString("Magic Memetic WP is present, good.", DEBUG_TOOLKIT);
-        }
+        //if (oMemeMagicWP == OBJECT_INVALID) PrintString("<Assert>Cannot find the waypoint - Magic_Memetic_WP - this used to be called MemeVault.</Assert>");
+        //else
+        //{
+        //    _PrintString("Magic Memetic WP is present, good.", DEBUG_TOOLKIT);
+        //}
 
         // This is what I wanted to do, but it doesn't appear to work.
         // If you can get it working, please let me know. It's late and I'm
@@ -613,25 +622,50 @@ object MeInit(object oTarget = OBJECT_INVALID)
         // This has been changed to create the hidden stores in the hidden vault area.
         // There appear to be bugs with the destruction of stores in populated areas.
         // In particular destroying stores can cause the game to crash.
+
+        //TODO what's the purpose of the stores in th ehidden vault area.  What do they hold?  Can it
+        //  be done wiht a datapoint, or on the NPC.  Does it require a store?
+        // The mmwp is apparently in the hidden area and all npc store waypoints are stacked on it.
         oSelf = CreateObject(OBJECT_TYPE_STORE, "Magic_Memetic_Store", GetLocation(oMemeMagicWP));
-        SetLocalInt(oSelf, "MEME_Type", TYPE_NPC_SELF);
-        if (!GetIsObjectValid(oSelf))
+        SetLocalInt(oSelf, "MEME_Type", TYPE_NPC_SELF);  // <--- 0x020000
+        if (!GetIsObjectValid(oSelf))   // <--- oddly, oSelf is the mm_store, not the NPC
         {
             _PrintString("Assert: Failed to create NPC_SELF on object:"+_GetName(oTarget));
+            //This is bad feedback, NPC_SELF is not being created on the NPC, but as a store on the mm_waypoint
         }
         else
         {
             _PrintString("NPC_SELF initialized, store successfully created.", DEBUG_TOOLKIT);
+            //Slightly better feedback NPC_SELF = store created, not two separate actions/objects
         }
 
-        if (oTarget == OBJECT_SELF) NPC_SELF = oSelf;
+        //NPC_SELF is global in h_constants --> object NPC_SELF = GetLocalObject (OBJECT_SELF, "MEME_NPCSelf");
+        if (oTarget == OBJECT_SELF) NPC_SELF = oSelf;  // So, resetting the global to the store, which is really NPC_SELF
+                                                       // Why?  Doesn't it reference "MEME_NPCSelf" every time it's
+                                                       // called.  So we can just set "MEME"NPCSelf" to what we
+                                                       // want, as in the next call.  Seems like this line and the
+                                                       // next line do the same thing.
 
-        SetLocalObject(oTarget, "MEME_NPCSelf", oSelf);
+        SetLocalObject(oTarget, "MEME_NPCSelf", oSelf);     // Generally, oTarget = oSelf, so what's being accomplished here
+                                                            // if something other than OBJECT_SELF calls MeInit()?
+                                                            // But oSelf is actually the store, so we're setting the store
+                                                            //  object on the NPC and NPC object on the store for cross-reference
+                                                            //  Ok, this is just like the way the crowd system is implemented with
+                                                            //  items containing the area object and area object containing the item
+                                                            //  objects.  Can probably make both of these "MEME_Owner" instead of two
+                                                            //  different variable names to keep track of, or some other variable
+                                                            //  that represents a link between the two objects.
         SetLocalObject(oSelf,   "MEME_Owner",   oTarget);
-        SetLocalString(oSelf,   "Name", GetName(oTarget)+"s Store");
+        SetLocalString(oSelf,   "Name", GetName(oTarget)+"s Store");    //Purpose of this variable?  Is someone going to go
+                                                                        //in-game and look at the entire stack of store waypoints
+                                                                        //looking for something?  Where else is this used?
 
         object oBag = OBJECT_INVALID;
 
+        //So, making all these "bags" (items/objects) on the store.  This can also be accomplished as an object list on the NPC
+        //  himself.  Is it important to have it as a separate store?  Maybe if the NPC dies?
+
+        //What do all these bags do?
         oBag = _MeMakeObject(oSelf, "GeneratorBag",  TYPE_GENERATOR_BAG);
         SetLocalObject(oSelf, "MEME_GeneratorBag", oBag);
         oBag = _MeMakeObject(oSelf, "EventBag",  TYPE_EVENT_BAG);
@@ -647,6 +681,7 @@ object MeInit(object oTarget = OBJECT_INVALID)
         oBag = _MeMakeObject(oSelf, "PrioBag5", TYPE_PRIO_BAG5);
         SetLocalObject(oSelf, "MEME_PrioBag5", oBag);
 
+        //Wonder what this one is for
         oBag = _MeMakeObject(oSelf, "SuspendBag", TYPE_PRIO_SUSPEND);
         SetLocalObject(oSelf, "MEME_SuspendBag", oBag);
     }
@@ -654,10 +689,11 @@ object MeInit(object oTarget = OBJECT_INVALID)
     // NPC_SELF is a global that represents the memetic self (as opposed to OBJECT_SELF).
     // This is the object that should hold your variables and will be saved, when saving
     // NPCs is supported.
-    if (oTarget == OBJECT_SELF) NPC_SELF = oSelf;
-
-    _End("MeInit", DEBUG_TOOLKIT);
-    return oSelf;
+    if (oTarget == OBJECT_SELF) NPC_SELF = oSelf;  //Didn't we already do this earlier?  If so, and not returning prior, why are we
+                                                   //doing it in the instantiation loop when the global represents an OBJECT_SELF that
+                                                   // is constantly changing.  See how OBJECT_SELF was used as the area check for
+                                                   // the crowd system.
+    return oSelf;       //Returns the store object (NPC_SELF?)
 }
 
 /* Run a Memetic Script

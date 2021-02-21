@@ -14,9 +14,8 @@
 void main()
 {
     object oEnter = GetEnteringObject();
-    _Start("OnAreaEnter object='" + _GetName(oEnter) + "'", DEBUG_TOOLKIT);
 
-    int iPlayerCount = GetLocalInt(OBJECT_SELF, "AreaPlayerCount");
+    //int iPlayerCount = GetLocalInt(OBJECT_SELF, "AreaPlayerCount");
     struct message stMsg;
 
     // If this is the first DM or PC to enter this area, notify the NPCs to
@@ -30,7 +29,7 @@ void main()
             // This sends a broadcast message on the channel named after this area.
             MeBroadcastMessage(stMsg, "AI_" + GetTag(OBJECT_SELF), TRUE);
         }
-        SetLocalInt(OBJECT_SELF, "AreaPlayerCount", iPlayerCount+1);
+        //SetLocalInt(OBJECT_SELF, "AreaPlayerCount", iPlayerCount+1);
     }
     // Notify NPCs they've just entered an area so they can (optionally)
     // subscribe to this area's messages. NPCs do this to receive information
@@ -55,6 +54,4 @@ void main()
     // Run any area-specific generators
     string sTag = GetTag(OBJECT_SELF);
     MeExecuteScript(sTag, "_ent");
-
-    _End();
 }

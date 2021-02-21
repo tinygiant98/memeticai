@@ -10,12 +10,8 @@
 
 void main()
 {
-    _Start("OnCombatRoundEnd", DEBUG_COREAI);
-
     MeExecuteGenerators("_end");
     MeUpdateActions();
-
-    _End("OnCombatRoundEnd", DEBUG_COREAI);
 }
 
 

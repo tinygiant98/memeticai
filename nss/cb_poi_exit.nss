@@ -21,8 +21,6 @@ void _MePOICallFunction(string sFunction, object oArg=OBJECT_INVALID, object oSe
 
 void main()
 {
-    _Start("ExitEmitterArea", DEBUG_TOOLKIT);
-
     object oEmitter = GetAreaOfEffectCreator();
     object oCreature = GetExitingObject();
     int i = 0;
@@ -71,6 +69,4 @@ void main()
             DeleteLocalInt(oCreature, "MEME_EMITTER"+sName);
         }
     }
-
-    _End("ExitEmitterArea", DEBUG_TOOLKIT);
 }

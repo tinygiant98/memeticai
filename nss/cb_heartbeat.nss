@@ -11,12 +11,8 @@
 
 void main()
 {
-    _Start("OnHeartbeat", DEBUG_COREAI);
-
     MeExecuteGenerators("_hbt");
     MeUpdateActions();
-
-    _End();
 }
 
 

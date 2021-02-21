@@ -4,8 +4,6 @@
 
 void main()
 {
-    _Start("EquipItem", DEBUG_TOOLKIT);
-
     object oItem = GetPCItemLastEquipped();
     object oPC = GetPCItemLastEquippedBy();
     string sTag = GetTag(oItem);
@@ -22,6 +20,4 @@ void main()
         struct message stMsg = MeCreateMessage("Weapon/Equipped", "", 0, 0.0, oPC);
         MeBroadcastMessage(stMsg, "CityLimits");  // Area tag, or use Silent Shout/Talk instead...
     }
-
-    _End();
 }

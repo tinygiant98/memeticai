@@ -16,12 +16,8 @@ void main()
     object oSpeaker = GetLastSpeaker();
     if (!GetIsObjectValid(oSpeaker)) return;
 
-    _Start("OnConversation", DEBUG_COREAI);
-
     MeExecuteGenerators("_tlk");
     MeUpdateActions();
-
-    _End("OnConversation", DEBUG_COREAI);
 }
 
 

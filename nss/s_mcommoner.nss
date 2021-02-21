@@ -5,10 +5,10 @@ void main()
     _Start("OnSpawn name = '"+_GetName(OBJECT_SELF)+"'");
 
     // initialize the NPC's memetic infrastructure
-    NPC_SELF = MeInit();
+    NPC_SELF = MeInit();   // scripts are called by cb_spawn, but cb_cpawn already has MeInit() in it.  Why run it twice?
 
     // assign behavior classes to the NPC
-    MeInstanceOf(NPC_SELF, "generic,walker");
+    MeInstanceOf(NPC_SELF, "generic,walker");  // <-- also done in cb_spawn, why the repeat?
 
     // build talk table
 

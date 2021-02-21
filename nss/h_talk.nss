@@ -402,26 +402,37 @@ void TalkTableLoad(string sFile)
     _End();
 }
 
+//Transfer a string to the designated conversor object.  If the conversor is a PC, what are we
+//  transferring and how's he getting it?  Only called from TalkCommand() above -- internal function
+
+//int "Transfer"    (T/F)      : Determines if the commands should be interpreted by the NPC or the converser
 string TalkTransfer(string sEntry)
 {
-    _Start("TalkTransfer TransferString='" + sEntry + "'", DEBUG_TALK_TOOLS);
-
     // Defines the transfer string and removes it from the entry
+    // Where is "Transfer" set?
+    
+    // Add first character of sEntry to existing "Transfer" variable
     string sTransfer = GetLocalString(MEME_SELF, "Transfer") + StringGetFirstChar(sEntry);
+    
+    // Now get rid of that first character
     sEntry = StringDeleteFirstChar(sEntry);
+    
+    // If we're at a separator pipe, send the entire section, assumes something like t#|words|S or the like
     if (StringGetFirstChar(sEntry) == MAIN_SEPARATOR)
     {
+        // Delete the |, assign the entire segment to sTransfer, then delete the segment from sEntry
         sEntry = StringDeleteFirstChar(sEntry);
         sTransfer = sTransfer + MAIN_SEPARATOR + StringGetSegment(sEntry, 0) + MAIN_SEPARATOR;
         sEntry = StringDeleteSegment(sEntry, 0);
     }
-    SetLocalString(MEME_SELF, "Transfer", sTransfer);
 
-    _End();
+    // Set sTransfer onto "Transfer" variable
+    SetLocalString(MEME_SELF, "Transfer", sTransfer);
 
     return sEntry;
 }
 
+//Forces NPC to face oConverser and play a random waiting animation
 void TalkWait(object oConverser)
 {
     if (oConverser != OBJECT_INVALID)

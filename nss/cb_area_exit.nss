@@ -14,7 +14,6 @@
 void main()
 {
     object oExit = GetExitingObject();
-    _Start("OnAreaExit object='" + _GetName(oExit) + "'", DEBUG_TOOLKIT);
 
     int iPlayerCount = GetLocalInt(OBJECT_SELF, "AreaPlayerCount");
     struct message stMsg;
@@ -44,5 +43,4 @@ void main()
     // Run any area-specific generators
     string sTag = GetTag(OBJECT_SELF);
     MeExecuteScript(sTag, "_ext");
-    _End();
 }

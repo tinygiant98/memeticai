@@ -11,12 +11,8 @@
 
 void main()
 {
-    _Start("OnInventoryDisturbed", DEBUG_COREAI);
-
     MeExecuteGenerators("_inv");
     MeUpdateActions();
-
-    _End();
 }
 
 

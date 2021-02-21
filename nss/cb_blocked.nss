@@ -10,12 +10,8 @@
 
 void main()
 {
-    _Start("OnBlocked", DEBUG_COREAI);
-
     MeExecuteGenerators("_blk");
     MeUpdateActions();
-
-    _End("OnBlocked", DEBUG_COREAI);
 }
 
 

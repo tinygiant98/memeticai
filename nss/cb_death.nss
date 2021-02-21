@@ -11,12 +11,8 @@
 
 void main()
 {
-    _Start("OnDeath", DEBUG_COREAI);
-
     MeExecuteGenerators("_dth");
     MeUpdateActions();
-
-    _End("OnDeath", DEBUG_COREAI);
 }
 
 

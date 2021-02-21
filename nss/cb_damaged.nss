@@ -11,12 +11,8 @@
 
 void main()
 {
-    _Start("OnDamaged", DEBUG_COREAI);
-
     MeExecuteGenerators("_dmg");
     MeUpdateActions();
-
-    _End("OnDamaged", DEBUG_COREAI);
 }
 
 
